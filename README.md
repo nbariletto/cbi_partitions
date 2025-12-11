@@ -240,7 +240,7 @@ for i in range(2):
 plt.show()
 ```
 
-![Test Partition Results](images/test_partitions_results.png)
+![Test Partition Results](images/test_partitions.png)
 
 We now check what hypothesis testing produces under the VI-KDE metric and VI-ball scores.
 
@@ -273,6 +273,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
