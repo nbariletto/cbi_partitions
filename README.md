@@ -35,21 +35,21 @@ from pyrichlet import mixture_models
 
 # --- Simulation Configuration ---
 config = {
-    'n_nodes': 100, 
-    'p_dim': 2, 
+    'n_obs': 100, 
+    'dim': 2, 
     'n_clusters': 3,
     'seed': 12345
 }
 
-def simulate_gmm_data(n_nodes, p_dim, n_clusters, seed):
+def simulate_gmm_data(n_obs, dim, n_clusters, seed):
     np.random.seed(seed)
     means = np.array([[-3, -3], [-3, 3], [3, 0]])
-    cov = np.eye(p_dim) * 1.5
+    cov = np.eye(dim) * 1.5
     
-    true_labels = np.random.randint(0, n_clusters, n_nodes)
-    X = np.zeros((n_nodes, p_dim))
+    true_labels = np.random.randint(0, n_clusters, n_obs)
+    X = np.zeros((n_obs, dim))
     
-    for i in range(n_nodes):
+    for i in range(n_obs):
         X[i, :] = np.random.multivariate_normal(means[true_labels[i]], cov)
         
     return X, true_labels
@@ -81,7 +81,7 @@ mcmc_config = {
 
 print("--- Running Pyrichlet MCMC ---")
 total_iter = mcmc_config['burn_in'] + (mcmc_config['n_final_samples'] * mcmc_config['thinning'])
-p_dim = config['p_dim']
+dim = config['dim']
 
 # Initialize Sampler
 mm = mixture_models.PitmanYorMixture(
@@ -89,8 +89,8 @@ mm = mixture_models.PitmanYorMixture(
     pyd=mcmc_config['py_sigma'],
     mu_prior=X.mean(axis=0), 
     lambda_prior=0.01,
-    psi_prior=np.eye(p_dim) * 1.5, 
-    nu_prior=p_dim + 2,
+    psi_prior=np.eye(dim) * 1.5, 
+    nu_prior=dim + 2,
     rng=config['seed'], 
     total_iter=total_iter,
     burn_in=mcmc_config['burn_in'], 
@@ -207,10 +207,10 @@ collapsed_labels = true_labels.copy()
 collapsed_labels[collapsed_labels == 1] = 0
 
 # One-cluster partition (full homogeneity hypothesis)
-one_cluster_partition = np.ones(config['n_nodes'])
+one_cluster_partition = np.ones(config['n_obs'])
 
 # 100 cluster partition (full heterogeneity hypothesis)
-n_cluster_partition = np.arange(config['n_nodes'])
+n_cluster_partition = np.arange(config['n_obs'])
 
 p_val_true = kde.compute_p_value(true_labels)
 p_val_coll = kde.compute_p_value(collapsed_labels)
@@ -288,6 +288,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
