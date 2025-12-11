@@ -162,6 +162,8 @@ kde.plot_dpc_decision_graph()
 plt.show()
 ```
 
+![DPC Decision Graph](images/dpc_decision_graph.png)
+
 There are clearly two modes, corresponding to the two points that stand out as having both a large $\delta$ and $s$ value. Below we plot the corresponding partitions.
 
 ```python
@@ -173,9 +175,6 @@ for i in range(2):
 plt.show()
 ```
 
-![DPC Decision Graph](images/dpc_decision_graph.png)
-
-The presence of multiple peaks in the decision graph (high density, high separation) confirms the posterior is multimodal.
 
 ![DPC Modes](images/dpc_modes.png)
 
@@ -209,6 +208,13 @@ print(f"Ground Truth (K=3) p-value:    {p_val_true:.4f}")
 print(f"Collapsed (K=2) p-value:       {p_val_coll:.4f}")
 print(f"One cluster p-value:           {p_val_one:.4f}")
 print(f"100 cluster p-value:           {p_val_n:.4f}")
+```
+
+```text
+Ground Truth (K=3) p-value:    0.3756
+Collapsed (K=2) p-value:       0.6893
+One cluster p-value:           0.0010
+100 cluster p-value:           0.0010
 ```
 
 ### 6. Comparison with PartitionBall
@@ -258,6 +264,13 @@ print(f"Far-from-modes partition p-value (KDE):        {p_val_far:.4f}")
 print(f"Between-modes partition p-value (KDE):         {p_val_between:.4f}")
 print(f"Far-from-modes partition p-value (Ball):       {p_val_far_ball:.4f}")
 print(f"Between-modes partition p-value (Ball):        {p_val_between_ball:.4f}")
+```
+
+```text
+Far-from-modes partition p-value (KDE):        0.0010
+Between-modes partition p-value (KDE):         0.0819
+Far-from-modes partition p-value (Ball):       0.1399
+Between-modes partition p-value (Ball):        0.2587
 ```
 
 
