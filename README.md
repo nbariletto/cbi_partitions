@@ -56,7 +56,6 @@ X, true_labels = simulate_gmm_data(**config)
 # Visualize Ground Truth
 plt.figure(figsize=(3, 2))
 plt.scatter(X[:,0], X[:,1], c=true_labels, cmap='brg', edgecolor='k', s=50)
-plt.savefig("true_partition.png")
 plt.show()
 ```
 
@@ -274,6 +273,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
