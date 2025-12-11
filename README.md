@@ -87,7 +87,7 @@ mcmc_config = {
     'burn_in': 1000,
     'thinning': 5,
     'alpha': 0.03,
-    'py_sigma': 0.01, # Discount parameter
+    'py_sigma': 0.01,
 }
 
 print("--- Running Pyrichlet MCMC ---")
@@ -114,7 +114,6 @@ mm.fit_gibbs(y=X, show_progress=True)
 # Extract Partitions
 mcmc_partitions = [samp['d'] for samp in mm.sim_params]
 partitions = np.array(mcmc_partitions, dtype=np.int64)
-print(f"Collected {partitions.shape[0]} posterior samples.")
 ```
 
 ![Posterior K Distribution](images/posterior_k.png)
@@ -228,5 +227,6 @@ print(f"Split-Collapsed Ball p-value:{p_val_split_coll_ball:.4f}")
 The figure below visualizes the partitions we tested and their resulting acceptance/rejection status.
 
 ![Test Partition Results](images/test_partitions_results.png)
+
 
 
