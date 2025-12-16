@@ -5,7 +5,7 @@
 
 ## Installation
 
-You can install this package directly from GitHub into any Python environment:
+You can install this library directly from GitHub into any Python environment:
 
 ```bash
 pip install https://github.com/nbariletto/cbi_partitions/archive/main.zip
@@ -323,6 +323,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
