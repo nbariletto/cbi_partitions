@@ -1,5 +1,5 @@
-title: A Tutorial on Conformalized Bayesian Inference with Random Partition Models
-theme: minimal
+title: CBI for partitions
+theme: jekyll-theme-architect
 markdown: kramdown
 kramdown:
   math_engine: nil
