@@ -1,6 +1,5 @@
-title: `cbi_partitions`: Conformalized Bayesian Inference with Random Partition Models
+title: CBI for RPMs
 theme: jekyll-theme-minimal
-description: A Tutorial
 markdown: kramdown
 kramdown:
   math_engine: nil
