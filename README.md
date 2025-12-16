@@ -1,6 +1,6 @@
-# `cbi_partitions`: Conformal Bayesian Inference for Random Partition Models
+# `cbi_partitions`: Conformalized Bayesian Inference for Random Partition Models
 
-`cbi_partitions` is a Python library for performing Conformalized Bayesian Inference (CBI, introduced by [1]) for clustering problems based on partition-valued MCMC output from Bayesian random partition models. Leveraging MCMC samples and the Variation-of-Information (VI) metric between data partitions, the library provides: (i) a principled point estimate of the data clustering; (ii) credible sets of partitions with guaranteed posterior coverage and controlled size, built from a normalized measure of posterior typicality for any given partition (interpretable as a $p$-value and suitable for formal hypothesis testing); and (iii) a density-based clustering approach to explore and summarize the multimodal structure of the posterior distribution over the space of partitions.
+`cbi_partitions` is a Python library for performing Conformalized Bayesian Inference (CBI, introduced by [1]) for clustering problems based on partition-valued MCMC output. Leveraging MCMC samples and the Variation-of-Information (VI) metric between data partitions, the library provides: (i) a principled point estimate of the data clustering; (ii) credible sets of partitions with guaranteed posterior coverage and controlled size, built from conformal prediction principles [3] with a normalized measure of posterior typicality for any given partition (interpretable as a $p$-value and suitable for formal hypothesis testing); and (iii) a density-based clustering approach to explore and summarize the multimodal structure of the posterior distribution over the space of partitions.
 
 
 ## Installation
@@ -60,7 +60,7 @@ plt.show()
   <img src="images/true_partition.png" alt="Ground Truth">
 </p>
 
-We now fit a $PY(0.03, 0.01)$ mean-covariance Gaussian mixture model. Note that the MCMC implementation we use is based on the `pyrichlet` library [2], which we import here and is easily installed using `pip`. This is just for illustration purposes: in general you can replace your partition-valued MCMC output and directly skip to the next CBI-specific steps.
+We now fit a $PY(0.03, 0.01)$ mean-covariance Gaussian mixture model. Note that the MCMC implementation we use is based on the `pyrichlet` library [4], which we import here and is easily installed using `pip`. This is just for illustration purposes: in general you can replace your partition-valued MCMC output and directly skip to the next CBI-specific steps.
 
 ```python
 from pyrichlet import mixture_models 
@@ -118,7 +118,10 @@ plt.xticks(k_values_all)
 plt.grid(axis='y', linestyle='--')
 plt.show()
 ```
-![Posterior K Distribution](images/posterior_k.png)
+
+<p align="center">
+  <img src="images/posterior_k.png" alt="Posterior K Distribution">
+</p>
 
 <br>
 
@@ -186,21 +189,26 @@ plt.scatter(X[:,0], X[:,1], c=point_est_partition, cmap='brg', edgecolor='k', s=
 plt.show()
 ```
 
+<p align="center">
+  <img src="images/point_estimate.png" alt="Point estimate">
+</p>
+
 Given the uncertain clustering, the point estimate is picked as a 2-cluster partition, which essentially collapses the two left-most, ambiguously separated clusters.
 
-![DPC Decision Graph](images/point_estimate.png)
 
 <br>
 
 ### 4. CBI - Multimodality analysis
-Following [1], we analyze posterior multimodality using ideas from density-based clustering [3], using the VI-KDE as a proxy for posterior density. In particular, our calibration step above already computed (a) the calibration VI-KDE score $s(\theta)$ as well as the parameter $\delta(\theta$ for every calibration sample $\theta$. Recall from [1] that $\delta(\theta)$ measures the distance between $\theta$ and the closes calibration partition with a higher KDE score. Hence, it is enough to look at the decision graph below and to pick as posterior modes those partitions displaying abnormally large values of both $s(\theta)$ (meaning they lie in high-density regions) and $\delta(\theta)$ (meaning that they are well separated from other high-density samples).
+Following [1], we analyze posterior multimodality using ideas from density-based clustering [5], using the VI-KDE as a proxy for posterior density. In particular, our calibration step above already computed (a) the calibration VI-KDE score $s(\theta)$ as well as the parameter $\delta(\theta$ for every calibration sample $\theta$. Recall from [1] that $\delta(\theta)$ measures the distance between $\theta$ and the closes calibration partition with a higher KDE score. Hence, it is enough to look at the decision graph below and to pick as posterior modes those partitions displaying abnormally large values of both $s(\theta)$ (meaning they lie in high-density regions) and $\delta(\theta)$ (meaning that they are well separated from other high-density samples).
 
 ```python
 kde.plot_dpc_decision_graph()
 plt.show()
 ```
 
-![DPC Decision Graph](images/dpc_decision_graph.png)
+<p align="center">
+  <img src="images/dpc_decision_graph.png" alt="DPC decision graph">
+</p>
 
 There are clearly two modes, corresponding to the two points that stand out in the the north-east corner of the decision graph. Below we retrieve the corresponding partitions using visually picked $s$ and $\delta$ thresholds and visualize them.
 
@@ -213,7 +221,9 @@ for i in range(2):
 plt.show()
 ```
 
-![DPC Modes](images/dpc_modes.png)
+<p align="center">
+  <img src="images/dpc_modes.png" alt="DPC modes">
+</p>
 
 This reveals that both the KDE point estimate (by construction of the density-based clustering procedure) and a partition with three clusters, very similar to the data-generating one, find support as modes of the posterior distribution.
 
@@ -222,11 +232,11 @@ This reveals that both the KDE point estimate (by construction of the density-ba
 ### 5. CBI - Hypothesis Testing
 Point estimation and multimodality give a picture of the posterior. We now proceed to test wether a specific, user-specified partition $\theta$ is supported as typical under the posterior. Following [1], this is done by computing the conformal $p$-value
 
-$$p(\theta) = \frac{1 + \text{no. of calibration samples with }s(\cdot)\leq s(\theta)}{1 + \text{no. of calibration samples}}$$,
+$$p(\theta) = \frac{1 + \text{no. of calibration samples with } s(\cdot)\leq s(\theta)}{1 + \text{no. of calibration samples}}$$,
 
 which can be formally interpreted as a $p$-value under the null hypothesis that the calibration samples and $\theta$ are jointly iid under the posterior, or simply as a measure of posterior typicality. Importantly, the set of $theta$'s with $p(\theta) \geq \alpha$ is guaranteed to have posterior coverage more than $1-\alpha$ (see [1] for more details).
 
-Hence, we test four specific clustering hypotheses to see if they are consistent with the data at a significance level of $\alpha=0.1$ (90% confidence).
+Hence, we test four specific clustering hypotheses to see if they are consistent with the posterior, picking the test level at $\alpha=0.1$ (so the resulting set will have guaranteed posterior coverage of 90%).
 
 1.  **The true partition;**
 2.  **The ''collapsed'' partition:** Merging the two leftmost ground-truth clusters;
@@ -235,7 +245,7 @@ Hence, we test four specific clustering hypotheses to see if they are consistent
 
 
 ```python
-# Collapsed Partition (merge true leftmost clusters)
+# Collapsed partition (merge true left-most clusters)
 collapsed_labels = true_labels.copy()
 collapsed_labels[collapsed_labels == 1] = 0
 
@@ -245,12 +255,12 @@ one_cluster_partition = np.ones(config['n_obs'])
 # 100 cluster partition (full heterogeneity hypothesis)
 n_cluster_partition = np.arange(config['n_obs'])
 
+# Compute and display p-values
 p_val_true = kde.compute_p_value(true_labels)
 p_val_coll = kde.compute_p_value(collapsed_labels)
 p_val_one = kde.compute_p_value(one_cluster_partition)
 p_val_n = kde.compute_p_value(n_cluster_partition)
 
-# --- P-values ---
 print(f"Ground Truth (K=3) p-value:    {p_val_true:.4f}")
 print(f"Collapsed (K=2) p-value:       {p_val_coll:.4f}")
 print(f"One cluster p-value:           {p_val_one:.4f}")
@@ -269,16 +279,20 @@ As expected from our multimodality analysis, both the true partition and its col
 <br>
 
 ### 6. Comparison with VI balls
-Finally, we compare results between the VI-KDE score procedure and VI balls (which are obtained as CBI sets using the VI distance from a point estimator as a non-conformity score, implemented usingusing `PartitionBall`).
+Finally, we compare results between the VI-KDE score procedure and the VI ball centered around our point estimate (recall that it essentially coincides with the ``collapsed'' true partition). The VI ball with posterior coverage $1-\alpha$, initially proposed by [6], is obtained within the CBI framework using the negative VI distance $\tilde s(\theta)$ from the point estimate as a score, which we implemented using the `PartitionBall` class.
 
-2.  **A partition far from both modes, moving away from the ''collapsed'' partition in the opposite direction compared to the true partition.** 
-3.  **A partition ''between'' the two modes.**
+In particular, we are interested in comparing the size of the two sets. Because we have found two modes, we suspect that the posterior may place most of its mass close to each mode, but not much mass either ``between'' the two modes or far from both. Intuitively, think of a bimodal distribution on the real line, with two quite well separated modes. Therefore we test inclusion in both sets of
+
+1.  **A partition far from both modes**, moving away from the ''collapsed'' partition in the opposite direction compared to the true partition.
+2.  **A partition ''between'' the two modes.**
+
+Here is a plot of what these two partitions look like:
 
 ```python
-# 2. Partition far from modes (ertical split)
+# 2. Partition far from modes (vertical split)
 far_labels = (X[:, 0] > 2.5).astype(np.int64)
 
-# 3. Partition between modes (Collapsed partition with split top-left corner)
+# 3. Partition between modes (collapsed partition with split top-left corner)
 between_labels = collapsed_labels.copy()
 mask = (between_labels == 0) & (X[:, 1] >= 3.23)
 between_labels[mask] = 5
@@ -290,9 +304,11 @@ for i in range(2):
 plt.show()
 ```
 
-![Test Partition Results](images/test_partitions.png)
+<p align="center">
+  <img src="images/test_partitions.png" alt="Test partitions">
+</p>
 
-We now check what hypothesis testing produces under the VI-KDE metric and VI-ball scores.
+We now check what hypothesis testing produces under the VI-KDE and VI-ball scores.
 
 ```python
 # Run conformal tests with KDE score
@@ -324,6 +340,23 @@ Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
 
+The above results nicely show that, while the VI-KDE score procedure adapts naturally to the multimodality of the posterior, yielding a credible set that ''skips'' over low-density regions in the partition space either between modes or far from them, the VI-ball with the same coverage is insensitive to the shape of the posterior because the radius of the ball is ''enlarged in all directions'' starting from the point estimate until coverage is reached, and ends up including low-density partitions like the ones we tested.
+
+<br>
+
+### References
+
+[1] Bariletto, N., Ho, N., & Rinaldo, A. (2025). Conformalized Bayesian Inference, with Applications to Random Partition Models. arXiv preprint arXiv:2511.05746.
+
+[2] Meilă, M. (2007). Comparing clusterings—an information based distance. Journal of Multivariate Analysis, 98(5), 873-895.
+
+[3] Vovk, V., Gammerman, A., & Shafer, G. (2005). Algorithmic learning in a random world. Boston, MA: Springer US.
+
+[4] Selva, F., Fuentes-García, R., & Gil-Leyva, M. F. (2025). pyrichlet: A Python Package for Density Estimation and Clustering Using Gaussian Mixture Models. Journal of Statistical Software, 112, 1-39.
+
+[5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
+
+[6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
 
 
 
