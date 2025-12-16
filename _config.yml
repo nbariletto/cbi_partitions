@@ -1,4 +1,5 @@
-theme: minima
+title: CBI Partitions
+theme: jekyll-theme-cayman
 markdown: kramdown
 kramdown:
   math_engine: nil
