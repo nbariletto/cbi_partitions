@@ -1,9 +1,10 @@
 ---
 layout: default
 title: CBI for RPMs
+description: A Python tutorial
 ---
 
-`cbi_partitions` is a Python library to implement Conformalized Bayesian Inference (CBI, introduced by [1]) for clustering problems based on partition-valued MCMC output.
+`cbi_partitions` is a Python library that implements Conformalized Bayesian Inference (CBI, introduced by [1]) for clustering problems based on partition-valued MCMC output.
 
 Given MCMC samples and a notion of distance between data partitions, the library implements:
 - a point estimate of the data clustering;
