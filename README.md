@@ -1,6 +1,6 @@
 # cbi_partitions: Conformal Bayesian Inference for Random Partition Models
 
-**cbi_partitions** is a Python library for performing Conformal Bayesian Inference (CBI) on partition-valued data (clustering results). It provides valid uncertainty quantification and hypothesis testing for clustering analysis, specifically addressing challenges with multimodal posteriors.
+**cbi_partitions** is a Python library for performing Conformal Bayesian Inference (CBI, introduced by [1]) on partition-valued data (clustering results). It provides valid uncertainty quantification and hypothesis testing for clustering analysis, specifically addressing challenges with multimodal posteriors.
 
 ## Installation
 
@@ -288,6 +288,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
