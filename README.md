@@ -130,13 +130,17 @@ To begin, we import `PartitionKDE` and `PartitionBall` from the `cbi_partitions`
 from cbi_partitions import PartitionKDE, PartitionBall
 ```
 
-From [1], recall that the building block of CBI is the computation, for any calibration partition $\theta$, of the VI-KDE score
+From [1], recall that the building block of CBI is the computation, for all calibration partition samples $\theta$, of the VI-KDE score
 
-$$s(\theta) = \frac{1}{T}\sum_{t=1}^T \exp\{-\gamma \mathcal D_{VI}(\theta,\theta_t\}$$
+$$s(\theta) = \frac{1}{T}\sum_{t=1}^T e^{-\gamma\cdot \mathcal D_{VI}(\theta,\theta_t)},$$
 
-We split the MCMC samples into a **Training Set** (5000 partitions) to estimate the partition density and a **Calibration Set** (1000 partitions) to compute non-conformity scores. We use the **PartitionKDE** model with the Variation of Information (VI) metric.
+where $\theta_t, t=1,\ldots,T$ are training partition samples, $\gamma>0$ is a tuning parameter, and $\mathcal D_{VI}$ is the VI distance between partitions. `PartitionBall`, instead, will allow us to compute an alternative score
 
+$$\tilde s(\theta) = - D(\theta, \hat \theta),$$
 
+were $\hat theta$ is a point estimator of the data clustering. As [1] show, this choice of score yields a conformal set coinciding with a VI-ball centered at $\hat \theta$, whose size we will compare to the VI-KDE score set.
+
+Therefore, we now split the MCMC samples into a *training set* (5000 partitions) to estimate the score and a *calibration set* (1000 partitions) on which to evaluate $s(\theta)$.
 
 ```python
 np.random.seed(42)
@@ -146,12 +150,18 @@ np.random.shuffle(indices)
 split_idx = int(len(partitions) * 5/6)
 train_partitions = partitions[indices[:split_idx]]
 calib_partitions = partitions[indices[split_idx:]]
+```
 
-# --- Initialize KDE Model ---
+We are now ready to initialize the model and compute the calibration scores. This is done in a few simple lines of code as follows:
+
+```python
+# --- Initialize CBI pipeline ---
 kde = PartitionKDE(
     train_partitions=train_partitions,
-    metric='vi',
-    gamma=0.5
+    metric='vi', # default, can select 'binder' as well
+    gamma=0.5, # default
+    subsample_size=None, # default
+    remap_labels=True # default
 )
 
 # --- Compute all quantities needed for CBI ---
@@ -159,11 +169,14 @@ print("Calibrating KDE model...")
 kde.calibrate(calib_partitions)
 ```
 
+Note: when defining `kde`, the only necessary argument is `train_partitions`. We set everything else at the default values. In particular, the `PartitionKDE` class allows to choose between the VI and Binder losses to perform CBI, the value of $\gamma$, which random training subsample size to use to compute the calibration scores (`None`, which is recommended, uses the whole training set), and whether to perform a custom remapping of the cluster labels that facilitates VI distance computations. Moreover, should the user need them for custom use like plotting, `kde.calib_scores_` and `kde.dpc_delta_` allow to access the computed calibration scores and the separation values $\delta$ needed for the multimodality analysis below.
+
+
 <br>
 
 ### 3. CBI - Pseudo-MAP point estimate
 
-Given the calibration scores we just computed, we compute the point estimate as the calibration partition with highest pseudo-density score. This is done using the `.get_point_estimate()` method.
+Given the calibration scores we just computed, we compute the point estimate as the calibration partition with highest VI-KDE score. This is done using the `.get_point_estimate()` method.
 
 ```python
 point_est_partition = kde.get_point_estimate()
@@ -173,12 +186,14 @@ plt.scatter(X[:,0], X[:,1], c=point_est_partition, cmap='brg', edgecolor='k', s=
 plt.show()
 ```
 
+Given the uncertain clustering, the point estimate is picked as a 2-cluster partition, which essentially collapses the two left-most, ambiguously separated clusters.
+
 ![DPC Decision Graph](images/point_estimate.png)
 
 <br>
 
 ### 4. CBI - Multimodality analysis
-We use Density Peak Clustering (DPC) to visualize the posterior landscape and identify distinct modes.
+Following [1], we analyze posterior multimodality using ideas from density-based clustering [3], using the VI-KDE as a proxy for posterior density. In particular, our calibration step above already computed (a) the calibration VI-KDE score $s(\theta)$ as well as the parameter $\delta(\theta$ for every calibration sample $\theta$. Recall from [1] that $\delta(\theta)$ measures the distance between $\theta$ and the closes calibration partition with a higher KDE score. Hence, it is enough to look at the decision graph below and to pick as posterior modes those partitions displaying abnormally large values of both $s(\theta)$ (meaning they lie in high-density regions) and $\delta(\theta)$ (meaning that they are well separated from other high-density samples).
 
 ```python
 kde.plot_dpc_decision_graph()
@@ -187,7 +202,7 @@ plt.show()
 
 ![DPC Decision Graph](images/dpc_decision_graph.png)
 
-There are clearly two modes, corresponding to the two points that stand out as having both a large $\delta$ and $s$ value. Below we plot the corresponding partitions.
+There are clearly two modes, corresponding to the two points that stand out in the the north-east corner of the decision graph. Below we retrieve the corresponding partitions using visually picked $s$ and $\delta$ thresholds and visualize them.
 
 ```python
 modes_idx = kde.get_dpc_modes(s_thresh=0.75, delta_thresh=0.6)
@@ -200,15 +215,23 @@ plt.show()
 
 ![DPC Modes](images/dpc_modes.png)
 
+This reveals that both the KDE point estimate (by construction of the density-based clustering procedure) and a partition with three clusters, very similar to the data-generating one, find support as modes of the posterior distribution.
+
 <br>
 
 ### 5. CBI - Hypothesis Testing
-We test four specific clustering hypotheses to see if they are consistent with the data at a significance level of $\alpha=0.1$ (90% confidence).
+Point estimation and multimodality give a picture of the posterior. We now proceed to test wether a specific, user-specified partition $\theta$ is supported as typical under the posterior. Following [1], this is done by computing the conformal $p$-value
 
-1.  **The true partition (K=3);**
-2.  **The ''collapsed'' partition (K=2):** Merging the two leftmost ground-truth clusters;
-3.  **The one-cluster partition;**
-4.  **The $n$-cluster partition.**
+$$p(\theta) = \frac{1 + \text{no. of calibration samples with }s(\cdot)\leq s(\theta)}{1 + \text{no. of calibration samples}}$$,
+
+which can be formally interpreted as a $p$-value under the null hypothesis that the calibration samples and $\theta$ are jointly iid under the posterior, or simply as a measure of posterior typicality. Importantly, the set of $theta$'s with $p(\theta) \geq \alpha$ is guaranteed to have posterior coverage more than $1-\alpha$ (see [1] for more details).
+
+Hence, we test four specific clustering hypotheses to see if they are consistent with the data at a significance level of $\alpha=0.1$ (90% confidence).
+
+1.  **The true partition;**
+2.  **The ''collapsed'' partition:** Merging the two leftmost ground-truth clusters;
+3.  **The one-cluster trivial partition:** This tests whether full homogeneity among data points is supported by the posterior;
+4.  **The 100-cluster trivial partition:** This tests whether full heterogeneity among data points is supported by the posterior.
 
 
 ```python
@@ -240,6 +263,8 @@ Collapsed (K=2) p-value:       0.6893
 One cluster p-value:           0.0010
 100 cluster p-value:           0.0010
 ```
+
+As expected from our multimodality analysis, both the true partition and its collapsed version are included in the set as highly tipical parameter values under the posterior (indeed, we identified them as modes). Instead, both full homogeneity and full heterogeneity are strongly ruled out.
 
 <br>
 
@@ -298,6 +323,7 @@ Between-modes partition p-value (KDE):         0.0819
 Far-from-modes partition p-value (Ball):       0.1399
 Between-modes partition p-value (Ball):        0.2587
 ```
+
 
 
 
