@@ -1,9 +1,11 @@
-`cbi_partitions` is a Python library that implements Conformalized Bayesian Inference (CBI, introduced by [1]) for clustering problems based on partition-valued MCMC output.
+# cbi_partitions
 
-Given MCMC samples and a notion of distance between data partitions, the library implements:
+`cbi_partitions` is a Python library for Conformalized Bayesian Analysis (CBI) of posterior distributions over data partitions, based on partition-valued MCMC output.
+
+Given MCMC samples and a notion of distance between data partitions, the library provides:
 - a point estimate of the data clustering;
-- a credible set of partitions with guaranteed posterior coverage constructed using conformal prediction principles, together with a normalized measure of posterior typicality for any given partition (interpretable as a $p$-value and suitable for formal hypothesis testing);
-- a density-based clustering approach to explore and summarize the multimodal structure of the posterior distribution over the space of partitions.
+- credible sets of partitions with guaranteed posterior coverage constructed using conformal prediction principles, together with a normalized measure of posterior typicality for any given partition (interpretable as a p-value and suitable for hypothesis testing);
+- tools to explore and summarize multimodal posterior structure over the space of partitions using density-based ideas.
 
 ---
 
@@ -21,28 +23,24 @@ pip install https://github.com/nbariletto/cbi_partitions/archive/main.zip
 
 ## Overview
 
-The library is organized around three main components:
+The library consists of three main components:
 
-1. Partition distance functions implemented in Numba (Variation of Information and Binder);
-2. `PartitionKDE`, a density-based conformal model on the space of partitions;
-3. `PartitionBall`, a distance-based conformal model yielding credible balls around a point estimate.
+1. **Internal partition distance computations**, implemented in Numba for efficiency;
+2. **`PartitionKDE`**, the standard density-based pipeline for CBI;
+3. **`PartitionBall`**, a distance-based CBI method yielding metric credible balls.
 
-All partitions are represented as integer-valued arrays of length $n$, where the $i$-th entry denotes the cluster label of observation $i$.
+Partitions are represented as integer-valued arrays of length `n`, where the `i`-th entry denotes the cluster label assigned to observation `i`.
 
 ---
 
-## Partition distances
+## Partition distances (internal)
 
-The library supports two distances between partitions:
+The library internally supports two distances between partitions:
 
 - **Variation of Information (VI)**;
 - **Binder distance** (one minus the Rand index).
 
-Both distances are used internally by the conformal models (`PartitionKDE` and `PartitionBall`) and are implemented using Numba for efficiency.  
-Cluster labels are optionally remapped internally to a compact range to ensure numerical stability and memory safety.
-
-Distance computation and label remapping are **internal implementation details** and are **not exposed as part of the public API**.  
-Users interact with distances exclusively through the high-level classes provided by the library.
+Distance computation and optional remapping of cluster labels to a compact range are handled internally using Numba-accelerated routines. These operations are implementation details and are **not exposed as part of the public API**. Users interact with distances exclusively through the high-level conformal models described below.
 
 ---
 
@@ -50,20 +48,12 @@ Users interact with distances exclusively through the high-level classes provide
 
 ### Description
 
-`PartitionKDE` implements a kernel density–based conformal score on the space of partitions.  
-Given training partitions $\{\theta_t\}_{t=1}^T$, the score of a partition $\theta$ is
+`PartitionKDE` implements a density-based conformal score on the space of partitions.
 
-$$
-s(\theta)
-= \frac{1}{T} \sum_{t=1}^T \exp\bigl(-\gamma\, D(\theta,\theta_t)\bigr),
-$$
-
-where $D$ is either the VI or Binder distance and $\gamma > 0$ is a tuning parameter.
-
-The score serves simultaneously as:
+Given a collection of training partitions, each partition is scored by averaging an exponential kernel applied to its distances from the training set. The resulting score acts as:
 - a proxy for posterior density;
 - a conformity score for conformalized Bayesian inference;
-- the basis for point estimation and multimodality analysis.
+- the basis for point estimation and posterior multimodality analysis.
 
 ---
 
@@ -81,67 +71,63 @@ PartitionKDE(
 
 #### Parameters
 
-- **train_partitions** (`array-like`, shape `(T, n)`): training partitions (e.g. MCMC output).
-- **metric** (`'vi'` or `'binder'`, default `'vi'`): distance used in the kernel.
-- **gamma** (`float`, default `0.5`): bandwidth parameter.
-- **subsample_size** (`int` or `None`, default `None`): optional training subsample size.
-- **remap_labels** (`bool`, default `True`): whether to remap cluster labels internally.
+- **`train_partitions`**: array-like of shape `(T, n)`  
+  Training partitions, typically obtained from MCMC.
+- **`metric`**: `'vi'` or `'binder'` (default `'vi'`)  
+  Distance used internally by the kernel.
+- **`gamma`**: float (default `0.5`)  
+  Kernel decay parameter.
+- **`subsample_size`**: int or `None` (default `None`)  
+  Optional random subsample size for the training set.
+- **`remap_labels`**: bool (default `True`)  
+  Whether cluster labels are remapped internally.
 
 ---
 
 ### Methods
 
-#### score
+#### `score`
 
 ```python
 score(partitions)
 ```
 
-Computes KDE scores for one or more partitions.
+Computes the KDE score for one or more partitions.
 
-- **Parameters**
-  - `partitions`: array of shape `(n,)` or `(m, n)`
-- **Returns**
-  - `numpy.ndarray` of shape `(m,)`
+- **Input**: a single partition or an array of partitions  
+- **Output**: an array of scores, one per partition
+
+Higher scores indicate greater posterior typicality.
 
 ---
 
-#### calibrate
+#### `calibrate`
 
 ```python
 calibrate(calib_partitions)
 ```
 
-Scores calibration partitions and computes all quantities required for conformal inference and multimodality analysis.
-
-- **Parameters**
-  - `calib_partitions`: array of shape `(C, n)`
+Scores all calibration partitions and computes additional quantities required for conformal inference and posterior exploration.
 
 This method must be called before computing p-values.
 
 ---
 
-#### compute_p_value
+#### `compute_p_value`
 
 ```python
 compute_p_value(partition)
 ```
 
-Computes the conformal p-value
+Computes a normalized measure of posterior typicality for a given partition.
 
-$$
-p(\theta)
-= \frac{1 + \#\{c : s(\theta_c) \le s(\theta)\}}{1 + C}.
-$$
+The returned value is the fraction of calibration partitions whose score is less than or equal to the score of the given partition, with a standard finite-sample correction. It can be interpreted as a p-value under the assumption that the calibration samples and the tested partition are jointly drawn from the posterior distribution.
 
-- **Returns**
-  - `float` in $(0,1]$
-
-Higher values indicate greater posterior typicality.
+Higher values indicate greater posterior support.
 
 ---
 
-#### get_point_estimate
+#### `get_point_estimate`
 
 ```python
 get_point_estimate(source='calibration')
@@ -149,41 +135,41 @@ get_point_estimate(source='calibration')
 
 Returns the partition with the highest KDE score.
 
-- **source**: `'train'` or `'calibration'`
+- **`source`**: `'train'` or `'calibration'`
 
 This estimator can be interpreted as a pseudo-MAP estimate.
 
 ---
 
-### Density Peak Clustering (DPC)
+## Posterior multimodality and density peaks
 
-For each calibration partition $\theta$, the following are computed:
+During calibration, the library also computes quantities used to explore posterior multimodality using density-based ideas.
 
-- $s(\theta)$: normalized density score;
-- $\delta(\theta)$: distance to the nearest partition with higher score.
+For each calibration partition, the following are computed internally:
+- its KDE score;
+- its distance to the closest calibration partition with a higher score.
 
-These quantities are used to identify posterior modes.
+These quantities can be visualized and thresholded to identify well-separated high-density regions of the posterior.
 
-#### plot_dpc_decision_graph
+---
+
+### `plot_dpc_decision_graph`
 
 ```python
 plot_dpc_decision_graph(save_path=None)
 ```
 
-Plots the $(s,\delta)$ decision graph.
+Plots the decision graph displaying KDE score versus distance to higher-density partitions.
 
 ---
 
-#### get_dpc_modes
+### `get_dpc_modes`
 
 ```python
 get_dpc_modes(s_thresh, delta_thresh)
 ```
 
-Identifies mode candidates via thresholding.
-
-- **Returns**
-  - array of indices sorted by $s(\theta)\,\delta(\theta)$
+Returns the indices of calibration partitions whose KDE score exceeds `s_thresh` and whose distance to higher-density samples exceeds `delta_thresh`. Returned indices are ordered by the product of score and separation.
 
 ---
 
@@ -191,15 +177,7 @@ Identifies mode candidates via thresholding.
 
 ### Description
 
-`PartitionBall` implements a distance-based conformal score centered at a fixed point estimate $\hat\theta$.
-
-The nonconformity score is
-
-$$
-\tilde s(\theta) = D(\theta, \hat\theta),
-$$
-
-yielding conformal credible sets that coincide with metric balls around $\hat\theta$.
+`PartitionBall` implements a distance-based conformal procedure centered at a fixed point estimate. It yields credible sets that coincide with metric balls around the chosen center partition.
 
 ---
 
@@ -217,65 +195,46 @@ PartitionBall(
 
 ### Methods
 
-#### score
+#### `score`
 
 ```python
 score(partitions)
 ```
 
-Computes distances to the center partition.
+Computes distances between each partition and the center partition.
 
 ---
 
-#### calibrate
+#### `calibrate`
 
 ```python
 calibrate(calib_partitions)
 ```
 
-Computes calibration distances.
+Computes calibration distances to the center partition.
 
 ---
 
-#### compute_p_value
+#### `compute_p_value`
 
 ```python
 compute_p_value(partition)
 ```
 
-Computes the conformal p-value
+Computes a non-conformity p-value based on distance to the center.
 
-$$
-p(\theta)
-= \frac{1 + \#\{c : \tilde s(\theta_c) \ge \tilde s(\theta)\}}{1 + C}.
-$$
-
-Lower distances correspond to higher posterior typicality.
-
----
-
-#### get_point_estimate
-
-```python
-get_point_estimate()
-```
-
-Returns the center partition.
+The returned value is the fraction of calibration partitions whose distance to the center is greater than or equal to that of the given partition, with a standard finite-sample correction. Smaller distances correspond to greater posterior typicality.
 
 ---
 
 ## Notes
 
 - All distance computations are Numba-jitted for efficiency.
-- Pairwise calibration distances scale quadratically in the number of calibration samples.
-- The library is agnostic to the source of partition samples.
+- Pairwise distance calculations scale quadratically in the number of calibration samples.
+- The library is agnostic to the source of partition samples and can be used with any partition-valued MCMC output.
 
 ---
 
 ## References
 
-[1] Bariletto, N., Ho, N., & Rinaldo, A. (2025). *Conformalized Bayesian Inference, with Applications to Random Partition Models*. arXiv:2511.05746.
-
-[2] Rodriguez, A., & Laio, A. (2014). *Clustering by fast search and find of density peaks*. Science, 344(6191), 1492–1496.
-
-
+[1] Bariletto, N., Ho, N., & Rinaldo, A. (2025). *Conformalized Bayesian Inference, with Applications to Random Partition Models*. arXiv preprint.
