@@ -38,7 +38,7 @@ We generate a dataset of $n = 100$ observations from a mixture of three Gaussian
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- Simulation Configuration ---
+# Simulation Configuration
 config = {
     'n_obs': 100, 
     'dim': 2, 
@@ -176,7 +176,7 @@ calib_partitions = partitions[indices[split_idx:]]
 We are now ready to initialize the model and compute the calibration scores. This can be accomplished in just a few simple lines of code:
 
 ```python
-# --- Initialize CBI pipeline ---
+# Initialize CBI pipeline
 kde = PartitionKDE(
     train_partitions=train_partitions,
     metric='vi', # default, can select 'binder' as well
@@ -185,7 +185,7 @@ kde = PartitionKDE(
     remap_labels=True # default
 )
 
-# --- Compute all quantities needed for CBI ---
+# Compute all quantities needed for CBI
 print("Calibrating KDE model...")
 kde.calibrate(calib_partitions)
 ```
