@@ -35,8 +35,8 @@ Partitions are represented as integer-valued arrays of length $n$, where the $i$
 
 The library internally supports two distances between partitions:
 
-- **Variation of Information (VI)** [2];
-- **Binder distance** [3].
+- **Variation-of-Information (VI) metric** [2];
+- **Binder loss** [3].
 
 Distance computation and optional remapping of cluster labels to a compact range are handled internally using Numba-accelerated routines. These operations are implementation details and are **not exposed as part of the public API**. Users interact with distances exclusively through the high-level conformal models described below.
 
@@ -323,6 +323,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
