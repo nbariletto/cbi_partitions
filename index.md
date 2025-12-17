@@ -150,7 +150,7 @@ $$
 s(\theta) = \frac{1}{T}\sum_{t=1}^T e^{-\gamma \cdot \mathcal D_{VI}(\theta,\theta_t)},
 $$
 
-where $\theta_t$, $t=1,\ldots,T$, are training partition samples, $\gamma > 0$ is a tuning parameter, and $\mathcal D_{VI}$ denotes the Variation-of-Information distance between partitions [3]. 
+where $\theta_t$, $t=1,\ldots,T$, are training partition samples, $\gamma > 0$ is a tuning parameter, and $\mathcal D_{VI}$ denotes the Variation-of-Information (VI) distance between partitions [3]. 
 
 The `PartitionBall` method, instead, allows us to compute an alternative score:
 
