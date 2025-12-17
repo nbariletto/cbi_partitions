@@ -288,7 +288,7 @@ class PartitionKDE:
         plt.figure(figsize=(4, 3))
         plt.scatter(self.calib_scores_, self.dpc_delta_, alpha=0.6, c='blue', edgecolors='k')
         plt.xlabel(r'Density ($s$)')
-        plt.ylabel(r'Distance from higher density samples ($\delta$)')
+        plt.ylabel(r'Dist. to higher density samples ($\delta$)')
         plt.grid(True, linestyle='--', alpha=0.7)
         if save_path:
             plt.savefig(save_path, bbox_inches='tight')
@@ -351,5 +351,6 @@ class PartitionBall:
         # p-value = Fraction of scores >= new_score (worse or equal)
         p_val = (np.sum(self.calib_scores_ >= new_score) + 1) / (self.n_calib_ + 1)
         return p_val
+
 
 
