@@ -159,7 +159,7 @@ get_point_estimate(source='calibration')
 Returns the partition with the highest KDE score within the selected dataset. This can be interpreted as a pseudo–maximum-a-posteriori (pseudo-MAP) estimate.
 
 - **Parameters**
-  - `source`: `'train'` or `'calibration'`, indicating in which set of partitions is searched.
+  - `source`: `'train'` or `'calibration'`, indicating which set of partitions is searched.
 
 - **Returns**
   - A single partition (array of length `n`). If multiple partitions attain the maximum KDE score, one of them is returned. In this case, the choice corresponds to the first maximizer encountered and is deterministic given the ordering of the partitions.
@@ -317,6 +317,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
