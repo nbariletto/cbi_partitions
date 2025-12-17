@@ -253,35 +253,35 @@ class PartitionKDE:
         else:
             raise ValueError("source must be 'train' or 'calibration'")
 
-def _compute_dpc_vars(self):
-        """Computes DPC variables (s and delta, normalized) using efficient JIT compilation."""
-        print("Computing DPC variables...")
-        
-        # 1. Pairwise distances
-        self.calib_dist_matrix_ = _compute_pairwise_matrix(
-            self.calib_partitions_, self.metric_code_, self.remap_labels_
-        )
-        
-        # 2. Raw density scores
-        self.dpc_s_ = self.calib_scores_
-        
-        # 3. Delta (distance to nearest point with higher density)
-        self.dpc_delta_ = np.zeros(self.n_calib_)
-        sorted_indices = np.argsort(self.dpc_s_)[::-1] 
+    def _compute_dpc_vars(self):
+            """Computes DPC variables (s and delta, normalized) using efficient JIT compilation."""
+            print("Computing DPC variables...")
+            
+            # 1. Pairwise distances
+            self.calib_dist_matrix_ = _compute_pairwise_matrix(
+                self.calib_partitions_, self.metric_code_, self.remap_labels_
+            )
+            
+            # 2. Raw density scores
+            self.dpc_s_ = self.calib_scores_
+            
+            # 3. Delta (distance to nearest point with higher density)
+            self.dpc_delta_ = np.zeros(self.n_calib_)
+            sorted_indices = np.argsort(self.dpc_s_)[::-1] 
+                    
+            for i, idx_i in enumerate(sorted_indices):
+                if i == 0:
+                    if self.n_calib_ > 0:
+                        self.dpc_delta_[idx_i] = self.calib_dist_matrix_[idx_i].max()
+                    else:
+                        self.dpc_delta_[idx_i] = 1.0
+                    continue
                 
-        for i, idx_i in enumerate(sorted_indices):
-            if i == 0:
-                if self.n_calib_ > 0:
-                    self.dpc_delta_[idx_i] = self.calib_dist_matrix_[idx_i].max()
-                else:
-                    self.dpc_delta_[idx_i] = 1.0
-                continue
-            
-            denser_indices = sorted_indices[:i]
-            dists_to_denser = self.calib_dist_matrix_[idx_i, denser_indices]
-            self.dpc_delta_[idx_i] = dists_to_denser.min()
-            
-        self.dpc_gamma_ = self.dpc_s_ * self.dpc_delta_
+                denser_indices = sorted_indices[:i]
+                dists_to_denser = self.calib_dist_matrix_[idx_i, denser_indices]
+                self.dpc_delta_[idx_i] = dists_to_denser.min()
+                
+            self.dpc_gamma_ = self.dpc_s_ * self.dpc_delta_
 
     def plot_dpc_decision_graph(self, save_path=None):
         """Plots the DPC decision graph using internal variables."""
@@ -354,3 +354,4 @@ class PartitionBall:
         # p-value = Fraction of scores >= new_score (worse or equal)
         p_val = (np.sum(self.calib_scores_ >= new_score) + 1) / (self.n_calib_ + 1)
         return p_val
+
