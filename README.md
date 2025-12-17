@@ -51,7 +51,7 @@ Distance computation and optional remapping of cluster labels to a compact range
 Given a collection of training partitions $\theta_t$, $t=1,\ldots,T$ and a distance function $D$ between partitions, a new partition $\theta$ is scored by averaging an exponential kernel applied to its distances from the training set:
 
 $$
-s(\theta) = \frac{1}{T}\sum_{t=1}^T e^{-\gamma \cdot \mathcal D(\theta,\theta_t)}
+s(\theta) = \frac{1}{T}\sum_{t=1}^T e^{-\gamma \cdot \mathcal D(\theta,\theta_t)}.
 $$
 
 The score acts as:
@@ -323,6 +323,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
