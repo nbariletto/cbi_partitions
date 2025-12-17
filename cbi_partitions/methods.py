@@ -262,12 +262,9 @@ class PartitionKDE:
                 self.calib_partitions_, self.metric_code_, self.remap_labels_
             )
             
-            # 2. Raw density scores
-            self.dpc_s_ = self.calib_scores_
-            
             # 3. Delta (distance to nearest point with higher density)
             self.dpc_delta_ = np.zeros(self.n_calib_)
-            sorted_indices = np.argsort(self.dpc_s_)[::-1] 
+            sorted_indices = np.argsort(self.calib_scores_)[::-1] 
                     
             for i, idx_i in enumerate(sorted_indices):
                 if i == 0:
@@ -281,15 +278,15 @@ class PartitionKDE:
                 dists_to_denser = self.calib_dist_matrix_[idx_i, denser_indices]
                 self.dpc_delta_[idx_i] = dists_to_denser.min()
                 
-            self.dpc_gamma_ = self.dpc_s_ * self.dpc_delta_
+            self.dpc_gamma_ = self.calib_scores_ * self.dpc_delta_
 
     def plot_dpc_decision_graph(self, save_path=None):
         """Plots the DPC decision graph using internal variables."""
-        if not hasattr(self, 'dpc_s_'):
+        if not hasattr(self, 'calib_scores_'):
             raise RuntimeError("DPC variables not computed. Run .calibrate() first.")
             
         plt.figure(figsize=(4, 3))
-        plt.scatter(self.dpc_s_, self.dpc_delta_, alpha=0.6, c='blue', edgecolors='k')
+        plt.scatter(self.calib_scores_, self.dpc_delta_, alpha=0.6, c='blue', edgecolors='k')
         plt.xlabel(r'Density ($s$)')
         plt.ylabel(r'Distance from higher density samples ($\delta$)')
         plt.grid(True, linestyle='--', alpha=0.7)
@@ -300,10 +297,10 @@ class PartitionKDE:
 
     def get_dpc_modes(self, s_thresh, delta_thresh):
         """Identifies mode indexes based on s and delta thresholds."""
-        if not hasattr(self, 'dpc_s_'):
+        if not hasattr(self, 'calib_scores_'):
             raise RuntimeError("DPC variables not computed. Run .calibrate() first.")
             
-        candidates = np.where((self.dpc_s_ > s_thresh) & (self.dpc_delta_ > delta_thresh))[0]
+        candidates = np.where((self.calib_scores_ > s_thresh) & (self.dpc_delta_ > delta_thresh))[0]
         # Sort by gamma = s * delta
         if len(candidates) > 0:
             gammas = self.dpc_gamma_[candidates]
@@ -354,4 +351,5 @@ class PartitionBall:
         # p-value = Fraction of scores >= new_score (worse or equal)
         p_val = (np.sum(self.calib_scores_ >= new_score) + 1) / (self.n_calib_ + 1)
         return p_val
+
 
