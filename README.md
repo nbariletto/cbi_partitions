@@ -198,12 +198,12 @@ Plots the decision graph displaying KDE score ($s$) versus minimum distance to h
 get_dpc_modes(s_thresh, delta_thresh)
 ```
 
-Identifies calibration partitions corresponding to well-separated, high-density regions of the posterior, based on the user-specified KDE thresholds `s_thresh` (KDE score, $s$) and `delta_thresh` (minimum distance from higher-density partitions, $\delta$). These thresholds are selected by examining the decision graph produced by `plot_dpc_decision_graph`, with the goal of isolating partitions that lie in the top-right portion of the graph, away from the bulk of the other samples.
+Identifies calibration partitions corresponding to well-separated, high-density regions of the posterior, based on the user-specified KDE thresholds `s_thresh` (KDE score, $s(\cdot)$) and `delta_thresh` (minimum distance from higher-density partitions, $\delta(\cdot)$). These thresholds are selected by examining the decision graph produced by `plot_dpc_decision_graph`, with the goal of isolating partitions that lie in the top-right portion of the graph, away from the bulk of the other samples.
 
 
 - **Parameters**
-  - `s_thresh`: minimum KDE score threshold
-  - `delta_thresh`: minimum separation threshold
+  - `s_thresh`: minimum KDE score $s(\cdot)$ threshold;
+  - `delta_thresh`: minimum separation $\delta(\cdot)$ threshold.
 
 - **Returns**
   - An array of indices of calibration partitions satisfying both thresholds, ordered by the product of KDE score and separation.
@@ -317,6 +317,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
