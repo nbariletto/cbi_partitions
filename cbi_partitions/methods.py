@@ -352,7 +352,7 @@ class PartitionBall:
         n_partitions = partitions.shape[0]
         scores = np.zeros(n_partitions, dtype=np.float64)
         for i in prange(n_partitions):
-            scores[i] = _calculate_distance(partitions[i], center_partition, metric_code, remap)
+            scores[i] = -_calculate_distance(partitions[i], center_partition, metric_code, remap)
         return scores
 
     def score(self, partitions):
@@ -366,13 +366,20 @@ class PartitionBall:
         print(f"Scoring {self.n_calib_} calibration samples (distance to center)...")
         self.calib_scores_ = self.score(self.calib_partitions_)
 
-    def compute_p_value(self, partition):
-        """Computes non-conformity p-value (higher score = worse)."""
-        if not hasattr(self, 'calib_scores_'): raise RuntimeError("Must call .calibrate() first")
-        new_score = self.score(partition)[0]
-        # p-value = Fraction of scores >= new_score (worse or equal)
-        p_val = (np.sum(self.calib_scores_ >= new_score) + 1) / (self.n_calib_ + 1)
-        return p_val
+    def compute_p_value(self, partitions):
+        """Computes the conformal p-value for one or more partitions."""
+        if not hasattr(self, 'calib_scores_'):
+            raise RuntimeError("Must call .calibrate() before .compute_p_value()")
+    
+        p = np.array(partitions, dtype=np.int64)
+    
+        if p.ndim == 1:
+            s = self.score(p)[0]
+            return (np.sum(self.calib_scores_ <= s) + 1) / (self.n_calib_ + 1)
+    
+        scores = self.score(p)
+        return self._pvals(scores, self.calib_scores_)
+
 
 
 
