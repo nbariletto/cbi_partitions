@@ -120,6 +120,7 @@ This method must be called before computing p-values or performing multimodality
   - `calib_partitions`: array of calibration partitions of shape `(m, n)`
 
 - **Side effects**
+  
   After calling this method, the following attributes are available:
 
   - `calib_partitions_`: the calibration partitions
@@ -318,6 +319,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
