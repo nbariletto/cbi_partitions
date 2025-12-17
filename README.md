@@ -72,15 +72,15 @@ PartitionKDE(
 
 #### Parameters
 
-- **`train_partitions`**: array-like of shape `(T, n)`  
-  Training partitions, typically obtained from MCMC.
-- **`metric`**: `'vi'` or `'binder'` (default `'vi'`)  
-  Distance used internally by the kernel.
-- **`gamma`**: float (default `0.5`)  
-  Kernel decay parameter.
-- **`subsample_size`**: int or `None` (default `None`)  
-  Optional random subsample size for the training set.
-- **`remap_labels`**: bool (default `True`)  
+- **`train_partitions`**: array-like of shape `(T, n)`.  
+  Training partitions, typically obtained from MCMC;
+- **`metric`**: `'vi'` or `'binder'` (default `'vi'`).  
+  Distance used internally by the kernel;
+- **`gamma`**: float (default `0.5`).
+  Kernel decay parameter;
+- **`subsample_size`**: int or `None` (default `None`). 
+  Optional random subsample size for the training set;
+- **`remap_labels`**: bool (default `True`).
   Whether cluster labels are remapped internally.
 
 ---
@@ -317,6 +317,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
