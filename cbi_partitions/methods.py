@@ -1,6 +1,5 @@
-# cbi_partitions.py
 """
-Reusable library for Conformalized Bayesian Analysis (CBI) of posterior distributions over data partitions.
+A Python library for Conformalized Bayesian Inference (CBI) with posterior distributions over data partitions.
 Contains:
 1. Numba-jitted partition distance functions (VI, Binder).
 2. PartitionKDE: Standard pipeline for CBI.
@@ -351,6 +350,7 @@ class PartitionBall:
         # p-value = Fraction of scores >= new_score (worse or equal)
         p_val = (np.sum(self.calib_scores_ >= new_score) + 1) / (self.n_calib_ + 1)
         return p_val
+
 
 
 
