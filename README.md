@@ -70,7 +70,7 @@ PartitionKDE(
     metric='vi',
     gamma=0.5,
     subsample_size=None,
-    remap_labels=True
+    remap_labels=False
 )
 ```
 
@@ -84,8 +84,8 @@ PartitionKDE(
   Kernel decay parameter;
 - **`subsample_size`**: int or `None` (default `None`). 
   Optional random subsample size for the training set;
-- **`remap_labels`**: bool (default `True`).
-  Whether cluster labels are remapped internally.
+- **`remap_labels`**: bool (default `False`).
+  Whether cluster labels are remapped internally. Set to `True` if using large or sparse integers to prevent memory overflow.
 
 ---
 
@@ -227,7 +227,7 @@ Identifies calibration partitions corresponding to well-separated, high-density 
 PartitionBall(
     point_estimate_partition,
     metric='vi',
-    remap_labels=True
+    remap_labels=False
 )
 ```
 
@@ -237,8 +237,8 @@ PartitionBall(
   A partition at which to center the credible set (usually estimated in advance);
 - **`metric`**: `'vi'` or `'binder'` (default `'vi'`).
   Distance used internally by the kernel;
-- **`remap_labels`**: bool (default `True`).
-  Whether cluster labels are remapped internally.
+- **`remap_labels`**: bool (default `False`).
+  Whether cluster labels are remapped internally. Set to `True` if using large or sparse integers to prevent memory overflow.
 
 ---
 
@@ -321,6 +321,7 @@ The method also supports batch evaluation: if multiple partitions are provided, 
 [5] Rodriguez, A., & Laio, A. (2014). Clustering by fast search and find of density peaks. Science, 344(6191), 1492-1496.
 
 [6] Wade, S., & Ghahramani, Z. (2018). Bayesian cluster analysis: Point estimation and credible balls (with discussion). Bayesian Analysis, 13(2), 559–626.
+
 
 
 
