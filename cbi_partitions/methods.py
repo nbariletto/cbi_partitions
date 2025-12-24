@@ -71,7 +71,7 @@ def _contingency_table(p1, p2):
     return contingency
 
 @njit(cache=True)
-def _vi_dist(p1, p2, remap=True):
+def _vi_dist(p1, p2, remap=False):
     """Computes the Variation-of-Information (VI) distance."""
     if remap:
         p1, _ = _remap_labels(p1)
@@ -176,7 +176,7 @@ def _pvals(scores, calib_scores):
 class PartitionKDE:
     """Metric-KDE for CBI."""
     
-    def __init__(self, train_partitions, metric='vi', gamma=0.5, subsample_size=None, remap_labels=True):
+    def __init__(self, train_partitions, metric='vi', gamma=0.5, subsample_size=None, remap_labels=False):
         if metric not in ['vi', 'binder']:
             raise ValueError("Metric must be 'vi' or 'binder'")
         
@@ -336,7 +336,7 @@ class PartitionKDE:
 
 class PartitionBall:
     """CBI instantiation of metric ball credible sets."""
-    def __init__(self, point_estimate_partition, metric='vi', remap_labels=True):
+    def __init__(self, point_estimate_partition, metric='vi', remap_labels=False):
         if metric not in ['vi', 'binder']: raise ValueError("Metric must be 'vi' or 'binder'")
         self.metric_ = metric
         self.metric_code_ = 0 if metric == 'vi' else 1
@@ -379,3 +379,4 @@ class PartitionBall:
     
         scores = self.score(p)
         return self._pvals(scores, self.calib_scores_)
+
