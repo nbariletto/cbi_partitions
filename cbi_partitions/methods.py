@@ -196,7 +196,21 @@ class PartitionKDE:
             
         self.n_train_ = self.train_partitions_.shape[0]
         self.n_nodes_ = self.train_partitions_.shape[1]
-        print(f"PartitionKDE initialized with {self.n_train_} train samples. Remap={self.remap_labels_}")
+
+        print(f"Initializing PartitionKDE with {self.n_train_} train samples...")
+        self._warmup()
+        print(f"Initialization completed.")
+
+    
+    def _warmup(self):
+        """Compiles JIT functions on dummy data."""
+        d_train = np.zeros((2, self.n_nodes_), dtype=np.int64)
+        d_test = np.zeros((1, self.n_nodes_), dtype=np.int64)
+        d_scores = np.zeros(1, dtype=np.float64)
+        
+        self._score_kde_batch(d_test, d_train, self.metric_code_, self.gamma_, self.remap_labels_)
+        _compute_pairwise_matrix(d_train, self.metric_code_, self.remap_labels_)
+        _pvals(d_scores, d_scores)
 
     @staticmethod
     @njit(parallel=True, cache=True)
@@ -227,11 +241,10 @@ class PartitionKDE:
         """Scores all calibration partitions and computes DPC variables."""
         self.calib_partitions_ = np.array(calib_partitions, dtype=np.int64)
         self.n_calib_ = self.calib_partitions_.shape[0]
-        
+
         print(f"Scoring {self.n_calib_} calibration samples...")
         self.calib_scores_ = self.score(self.calib_partitions_)
 
-        # Compute DPC variables
         self._compute_dpc_vars()
 
     def compute_p_value(self, partitions):
@@ -246,7 +259,7 @@ class PartitionKDE:
             return (np.sum(self.calib_scores_ <= s) + 1) / (self.n_calib_ + 1)
     
         scores = self.score(p)
-        return self._pvals(scores, self.calib_scores_)
+        return _pvals(scores, self.calib_scores_)
 
 
     def get_point_estimate(self, source='calibration'):
@@ -343,7 +356,19 @@ class PartitionBall:
         
         self.point_estimate_ = np.array(point_estimate_partition, dtype=np.int64)
         self.n_nodes_ = self.point_estimate_.shape[0]
-        print(f"PartitionBall initialized with metric: {self.metric_} (Remap={self.remap_labels_})")
+        
+        print(f"Initializing PartitionBall...")
+        self._warmup()
+        print(f"Initialization completed.")
+
+
+    def _warmup(self):
+        """Compiles JIT functions on dummy data."""
+        d_test = np.zeros((1, self.n_nodes_), dtype=np.int64)
+        d_scores = np.zeros(1, dtype=np.float64)
+        
+        self._score_distance_batch(d_test, self.point_estimate_, self.metric_code_, self.remap_labels_)
+        _pvals(d_scores, d_scores)
 
     @staticmethod
     @njit(parallel=True, cache=True)
@@ -362,7 +387,7 @@ class PartitionBall:
     def calibrate(self, calib_partitions):
         self.calib_partitions_ = np.array(calib_partitions, dtype=np.int64)
         self.n_calib_ = self.calib_partitions_.shape[0]
-        print(f"Scoring {self.n_calib_} calibration samples (distance to center)...")
+        print(f"Scoring {self.n_calib_} calibration samples (distance to point estimate)...")
         self.calib_scores_ = self.score(self.calib_partitions_)
 
     def compute_p_value(self, partitions):
@@ -377,6 +402,7 @@ class PartitionBall:
             return (np.sum(self.calib_scores_ <= s) + 1) / (self.n_calib_ + 1)
     
         scores = self.score(p)
-        return self._pvals(scores, self.calib_scores_)
+        return _pvals(scores, self.calib_scores_)
+
 
 
