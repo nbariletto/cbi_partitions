@@ -182,7 +182,7 @@ kde = PartitionKDE(
     metric='vi', # default, can select 'binder' as well
     gamma=0.5, # default
     subsample_size=None, # default
-    remap_labels=True # default
+    remap_labels=False # default
 )
 
 # Compute all quantities needed for CBI
@@ -195,7 +195,7 @@ kde.calibrate(calib_partitions)
 - choose between the VI and Binder metrics for CBI,
 - set the value of $\gamma$ in the definition of the KDE score,
 - specify a random training subsample size for computing the calibration scores (`None`, recommended, uses the full training set),
-- enable or disable a custom remapping of cluster labels to facilitate VI distance computations.
+- enable or disable a custom remapping of cluster labels to facilitate VI distance computations (you should set this to `True` if your partitions are encoded using large or sparse integers).
 
 Additionally, for custom uses such as plotting, the attributes `kde.calib_scores_` and `kde.dpc_delta_` provide access to the computed calibration scores and the separation values $\delta$ required for the multimodality analysis below.
 
@@ -359,7 +359,8 @@ p_val_between = kde.compute_p_value(between_labels)
 # Initialize VI-ball procedure
 ball_model = PartitionBall(
     point_estimate_partition=point_est_partition,
-    metric='vi'
+    metric='vi',
+    remap_labels=False
 )
 ball_model.calibrate(calib_partitions)
 
