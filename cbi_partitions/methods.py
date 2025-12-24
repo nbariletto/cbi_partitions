@@ -185,7 +185,6 @@ class PartitionKDE:
         self.gamma_ = gamma
         self.remap_labels_ = remap_labels
         
-        # Explicitly convert input list to numpy array
         train_partitions = np.array(train_partitions, dtype=np.int64)
 
         if subsample_size and subsample_size < len(train_partitions):
@@ -379,4 +378,5 @@ class PartitionBall:
     
         scores = self.score(p)
         return self._pvals(scores, self.calib_scores_)
+
 
